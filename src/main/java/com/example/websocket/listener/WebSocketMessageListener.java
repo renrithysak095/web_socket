@@ -17,21 +17,13 @@ public class WebSocketMessageListener {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @RabbitListener(queues = "queue")
-    public void handleMessage(Message message) {
-        messagingTemplate.convertAndSend("/chat.sendMessage", message.getContent());
+    @RabbitListener(queues = "groupQueue")
+    public void receiveGroupMessage(Message message) {
+        messagingTemplate.convertAndSend("/topic/group", message);
     }
 
-    @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
-        if (username != null) {
-            var chatMessage = Message.builder()
-                    .type(MessageType.LEAVE)
-                    .sender(username)
-                    .build();
-            messagingTemplate.convertAndSend("/topic/public", chatMessage);
-        }
+    @RabbitListener(queues = "directQueue")
+    public void receiveDirectMessage(Message message) {
+        messagingTemplate.convertAndSendToUser(message.getReceiver(), "/queue/direct", message);
     }
 }

@@ -30,8 +30,6 @@ function connect(event) {
     event.preventDefault();
 
 }
-
-
 function onConnected() {
     stompClient.subscribe('/topic/public', onMessageReceived);
     stompClient.send("/app/chat.addUser",
